@@ -1,0 +1,242 @@
+﻿@model IEnumerable<WEB.UrlShortner.Models.ShortUrl>
+
+@{
+    ViewData["Title"] = "Short URLs List";
+    string baseUrl = "https://localhost:44329/"; // Base URL for redirecting
+}
+
+<div class="container my-4">
+    <h2 class="text-center mb-4">Short URLs List</h2>
+
+    <div class="table-responsive">
+        <table id="shortUrlsTable" class="table table-striped table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Original URL</th>
+                    <th>Short URL</th>
+                    <th>Click Count</th>
+                    <th>QR Code</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var url in Model.OrderByDescending(x => x.Id))
+                {
+                    <tr>
+                        <td>@url.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@url.OriginalUrl</td>
+                        <td>
+                            <a href="@Url.Action("RedirectToOriginal", "Url", new { alias = url.ShortAlias })" class="text-primary" target="_blank">
+                                @($"{baseUrl}{url.ShortAlias}")
+                            </a>
+                        </td>
+                        <td>@url.ClickCount</td>
+                        <td>
+                            <a href="@url.QrCodeImagePath" download="QRCode_@("url.ShortAlias.png")" title="Download QR Code">
+                                <img src="@url.QrCodeImagePath" alt="QR Code" width="50" height="50" class="img-fluid qr-code-preview" />
+                            </a>
+                        </td>
+                        <td>
+                            <form asp-action="Delete" method="post" style="display:inline;">
+                                <input type="hidden" name="alias" value="@url.ShortAlias" />
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this URL?');">Delete</button>
+                            </form>
+                            <button onclick="downloadQRCode('@url.QrCodeImagePath', 'QRCode_@("url.ShortAlias.png")')" class="btn btn-success btn-sm">Download QR</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-action="Create" class="btn btn-primary">Create New Short URL</a>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="mt-5">
+        <!-- Total Clicks Per Short URL Chart -->
+        <div class="chart-container mt-5" style="position: relative; width: 50%; height: 300px; margin: 0 auto;">
+            <h3 class="text-center mb-3">Total Clicks Per Short URL</h3>
+            <canvas id="totalClicksChart"></canvas>
+        </div>
+
+        <!-- Click Distribution Pie Chart -->
+        <div class="chart-container mt-5" style="position: relative; width: 50%; height: 500px; margin: 0 auto; padding: 50px;">
+            <h3 class="text-center mb-3">Click Distribution</h3>
+            <canvas id="clickDistributionChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Add the DataTables CSS and JS files -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+@section Scripts{
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js -->
+
+    <script>
+        $(document).ready(function () {
+            $('#shortUrlsTable').DataTable({
+                pageLength: 5,
+                lengthMenu: [10, 25, 50, 100],
+                responsive: true,
+                language: {
+                    search: "Filter records:",
+                    lengthMenu: "Display _MENU_ records per page",
+                    info: "Showing page _PAGE_ of _PAGES_",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    },
+                }
+            });
+
+
+            // Chart for Total Clicks Per Short URL
+            var totalClicksCtx = document.getElementById('totalClicksChart').getContext('2d');
+            var totalClicksLabels = @Html.Raw(Json.Serialize(Model.Select(url => url.ShortAlias)));
+            var totalClicksData = @Html.Raw(Json.Serialize(Model.Select(url => url.ClickCount)));
+
+            var totalClicksChart = new Chart(totalClicksCtx, {
+                type: 'bar',
+                data: {
+                    labels: totalClicksLabels,
+                    datasets: [{
+                        label: 'Total Clicks',
+                        data: totalClicksData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Click Distribution Pie Chart
+            var clickDistributionCtx = document.getElementById('clickDistributionChart').getContext('2d');
+            var distributionData = @Html.Raw(Json.Serialize(Model.Select(url => url.ClickCount)));
+            var distributionLabels = @Html.Raw(Json.Serialize(Model.Select(url => url.ShortAlias)));
+
+            var clickDistributionChart = new Chart(clickDistributionCtx, {
+                type: 'pie',
+                data: {
+                    labels: distributionLabels,
+                    datasets: [{
+                        label: 'Click Distribution',
+                        data: distributionData,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(255, 159, 64, 0.2)',
+                            'rgba(255, 205, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(201, 203, 207, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(201, 203, 207, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.label}: ${context.raw} clicks`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        function downloadQRCode(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+        }
+    </script>
+
+}
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Arial', sans-serif;
+    }
+
+    .container {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #ffffff;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2, h3 {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .table {
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+        padding: 10px;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #e9ecef;
+    }
+
+    .qr-code-preview {
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+
+    .qr-code-preview:hover {
+        transform: scale(2); /* Enlarge QR code on hover */
+        z-index: 10;
+    }
+
+    @@media (max-width: 768px) {
+        .table {
+            font-size: 14px; /* Adjust table font size for small screens */
+        }
+
+        .chart-container {
+            width: 100%; /* Full width for small screens */
+        }
+    }
+</style>

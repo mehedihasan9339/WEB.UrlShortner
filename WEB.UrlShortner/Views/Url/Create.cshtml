@@ -1,0 +1,28 @@
+﻿@model WEB.UrlShortner.Models.ShortUrl
+
+<form asp-action="Create" method="post" id="shortUrlForm">
+    <div class="form-group">
+        <label>Original URL</label>
+        <input name="originalUrl" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label>Custom Alias (optional, random will be generated if left empty)</label>
+        <input name="alias" class="form-control" id="aliasInput" />
+        <div id="aliasAvailabilityMessage" class="text-danger"></div>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Short URL</button>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#aliasInput').on('input', function () {
+        const alias = $(this).val();
+        if (alias) {
+            $.get(`/Url/CheckAliasAvailability?alias=${alias}`, function (data) {
+                $('#aliasAvailabilityMessage').text(data.available ? 'Alias is available' : 'Alias is already taken');
+            });
+        } else {
+            $('#aliasAvailabilityMessage').text('');
+        }
+    });
+</script>

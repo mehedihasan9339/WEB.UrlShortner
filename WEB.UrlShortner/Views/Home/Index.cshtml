@@ -1,0 +1,54 @@
+﻿@model WEB.UrlShortner.Models.ShortUrl
+
+@{
+    ViewData["Title"] = "Create Short URL";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center">Create Your Short URL</h2>
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Shorten Your URL</h5>
+        </div>
+        <div class="card-body">
+            <p class="alert alert-info">
+                To create a short URL with a custom alias and track URL clicks, please log in. If you do not have an account, you can register for free!
+            </p>
+
+            <form asp-action="Create" method="post" id="shortUrlForm">
+                <div class="form-group">
+                    <label for="originalUrl">Original URL <span class="text-danger">*</span></label>
+                    <input type="url" name="originalUrl" class="form-control" id="originalUrl" required placeholder="Enter your original URL here..." />
+                </div>
+
+                <div class="form-group d-none">
+                    <label for="aliasInput">Custom Alias (optional, random will be generated if left empty)</label>
+                    <input type="text" name="alias" value="" class="form-control" id="aliasInput" />
+                    <div id="aliasAvailabilityMessage" class="text-danger mt-2"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create Short URL</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#aliasInput').on('input', function () {
+        const alias = $(this).val();
+        if (alias) {
+            $.get(`/Url/CheckAliasAvailability?alias=${alias}`, function (data) {
+                $('#aliasAvailabilityMessage').text(data.available ? 'Alias is available' : 'Alias is already taken');
+            });
+        } else {
+            $('#aliasAvailabilityMessage').text('');
+        }
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

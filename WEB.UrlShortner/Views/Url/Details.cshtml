@@ -1,0 +1,7 @@
+﻿@model WEB.UrlShortner.Models.ShortUrl
+
+<h2>Short URL Created</h2>
+<p>Original URL: @Model.OriginalUrl</p>
+<p>Short URL: <a href="@Url.Action("RedirectToOriginal", "Url", new { alias = Model.ShortAlias })" target="_blank">@Model.ShortAlias</a></p>
+<p>QR Code: <img src="@Model.QrCodeImagePath" alt="QR Code for Short URL" /></p>
+<p>Click Count: @Model.ClickCount</p>

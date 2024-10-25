@@ -1,0 +1,44 @@
+﻿@model WEB.UrlShortner.Models.ShortUrl
+
+@{
+    ViewData["Title"] = "Short URL Created";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center">Short URL Created Successfully!</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">URL Details</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">Original URL</h6>
+                    <p class="card-text">
+                        <a href="@Model.OriginalUrl" target="_blank">@Model.OriginalUrl</a>
+                    </p>
+                    <h6 class="card-title">Short URL</h6>
+                    <p class="card-text">
+                        <a href="@Url.Action("RedirectToOriginal", "Home", new { alias = Model.ShortAlias })" target="_blank" class="font-weight-bold">
+                            @Model.ShortAlias
+                        </a>
+                    </p>
+                    <h6 class="card-title">QR Code</h6>
+                    <div class="text-center">
+                        <img src="@Model.QrCodeImagePath" alt="QR Code for Short URL" class="img-fluid" style="max-width: 200px;" />
+                    </div>
+                    <h6 class="card-title">Click Count: <span class="badge badge-success" style="color: black !important;">@Model.ClickCount</span></h6>
+                    <div class="text-center">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Create Another Short URL</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
