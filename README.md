@@ -42,7 +42,12 @@ The URL Shortener Application is a web-based tool that converts long URLs into s
 
 ## Screenshot
 
-![Application Screenshot](application-screenshot.png)
+
+![Application Screenshot](https://raw.githubusercontent.com/mehedihasan9339/WEB.UrlShortner/refs/heads/master/WEB.UrlShortner/url-shortner-table.png)
+
+
+![Application Screenshot](https://raw.githubusercontent.com/mehedihasan9339/WEB.UrlShortner/refs/heads/master/WEB.UrlShortner/url-shortner-chrats.png)
+
 
 ---
 
